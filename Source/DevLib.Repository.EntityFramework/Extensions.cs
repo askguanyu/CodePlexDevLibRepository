@@ -6,6 +6,7 @@
 namespace DevLib.Repository.EntityFramework
 {
     using System;
+    using System.Collections.Generic;
     using System.Data;
     using System.Data.Common;
     using System.Data.Entity;
@@ -22,12 +23,50 @@ namespace DevLib.Repository.EntityFramework
     public static class Extensions
     {
         /// <summary>
-        /// Gets the name of the table.
+        /// Gets the database table column names.
         /// </summary>
-        /// <param name="source">The context.</param>
-        /// <param name="type">The type of entity.</param>
-        /// <returns>The name of table.</returns>
-        public static string GetTableName(this DbContext source, Type type)
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <param name="source">The DbContext.</param>
+        /// <returns>A list of column names.</returns>
+        public static List<string> GetDatabaseTableColumnNames<TEntity>(this DbContext source)
+        {
+            return source.GetDatabaseTableColumnNames(typeof(TEntity));
+        }
+
+        /// <summary>
+        /// Gets the database table column names.
+        /// </summary>
+        /// <param name="source">The DbContext.</param>
+        /// <param name="type">The type of the entity.</param>
+        /// <returns>A list of column names.</returns>
+        public static List<string> GetDatabaseTableColumnNames(this DbContext source, Type type)
+        {
+            var tableName = source.GetTableName(type);
+
+            return source
+                .Database
+                .SqlQuery<string>($"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='{tableName}'")
+                .ToList();
+        }
+
+        /// <summary>
+        /// Gets the model property mapping column names.
+        /// </summary>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <param name="source">The DbContext.</param>
+        /// <returns>A list of column names.</returns>
+        public static List<string> GetModelColumnNames<TEntity>(this DbContext source)
+        {
+            return source.GetModelColumnNames(typeof(TEntity));
+        }
+
+        /// <summary>
+        /// Gets the model property mapping column names.
+        /// </summary>
+        /// <param name="source">The DbContext.</param>
+        /// <param name="type">The type of the entity.</param>
+        /// <returns>A list of column names.</returns>
+        public static List<string> GetModelColumnNames(this DbContext source, Type type)
         {
             var metadata = ((IObjectContextAdapter)source).ObjectContext.MetadataWorkspace;
 
@@ -43,14 +82,65 @@ namespace DevLib.Repository.EntityFramework
                 .EntitySets
                 .Single(s => s.ElementType.Name == entityType.Name);
 
-            var mapping = metadata.GetItems<EntityContainerMapping>(DataSpace.CSSpace)
-                    .Single()
-                    .EntitySetMappings
-                    .Single(s => s.EntitySet == entitySet);
+            var mapping = metadata
+                .GetItems<EntityContainerMapping>(DataSpace.CSSpace)
+                .Single()
+                .EntitySetMappings
+                .Single(s => s.EntitySet == entitySet);
+
+            var tableEntitySet = mapping
+                .EntityTypeMappings
+                .Single()
+                .Fragments
+                .Single()
+                .StoreEntitySet;
+
+            var columnNames = mapping
+                .EntityTypeMappings
+                .Single()
+                .Fragments
+                .Single()
+                .PropertyMappings
+                .OfType<ScalarPropertyMapping>()
+                .Select(i => i.Column.Name)
+                .ToList();
+
+            return columnNames;
+        }
+
+        /// <summary>
+        /// Gets the name of the table.
+        /// </summary>
+        /// <param name="source">The context.</param>
+        /// <param name="type">The type of entity.</param>
+        /// <returns>The name of table.</returns>
+        public static string GetTableName(this DbContext source, Type type)
+        {
+            var metadata = ((IObjectContextAdapter)source).ObjectContext.MetadataWorkspace;
+
+            var objectItemCollection = (ObjectItemCollection)metadata.GetItemCollection(DataSpace.OSpace);
+
+            var entityType = metadata
+                .GetItems<EntityType>(DataSpace.OSpace)
+                .Single(e => objectItemCollection.GetClrType(e) == type);
+
+            var entitySet = metadata
+                .GetItems<EntityContainer>(DataSpace.CSpace)
+                .Single()
+                .EntitySets
+                .Single(s => s.ElementType.Name == entityType.Name);
+
+            var mapping = metadata
+                .GetItems<EntityContainerMapping>(DataSpace.CSSpace)
+                .Single()
+                .EntitySetMappings
+                .Single(s => s.EntitySet == entitySet);
 
             var table = mapping
-                .EntityTypeMappings.Single()
-                .Fragments.Single()
+                .EntityTypeMappings
+                .Single()
+                .Fragments
+                .Single()
                 .StoreEntitySet;
 
             return (string)table.MetadataProperties["Table"].Value ?? table.Name;
@@ -202,6 +292,85 @@ namespace DevLib.Repository.EntityFramework
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Checks whether or not the database is compatible with the the current Code First model.
+        /// </summary>
+        /// <typeparam name="TEntity">The type of the entity.</typeparam>
+        /// <param name="source">The source DbContext.</param>
+        /// <returns>True if the model hash in the context and the database match; false otherwise.</returns>
+        public static bool CompatibleWithModel<TEntity>(this DbContext source)
+        {
+            return source.CompatibleWithModel(typeof(TEntity));
+        }
+
+        /// <summary>
+        /// Checks whether or not the database is compatible with the the current Code First model.
+        /// </summary>
+        /// <param name="source">The source DbContext.</param>
+        /// <param name="type">The type of the entity.</param>
+        /// <returns>True if the model hash in the context and the database match; false otherwise.</returns>
+        public static bool CompatibleWithModel(this DbContext source, Type type)
+        {
+            try
+            {
+                var metadata = ((IObjectContextAdapter)source).ObjectContext.MetadataWorkspace;
+
+                var objectItemCollection = (ObjectItemCollection)metadata.GetItemCollection(DataSpace.OSpace);
+
+                var entityType = metadata
+                    .GetItems<EntityType>(DataSpace.OSpace)
+                    .Single(e => objectItemCollection.GetClrType(e) == type);
+
+                var entitySet = metadata
+                    .GetItems<EntityContainer>(DataSpace.CSpace)
+                    .Single()
+                    .EntitySets
+                    .Single(s => s.ElementType.Name == entityType.Name);
+
+                var mapping = metadata
+                    .GetItems<EntityContainerMapping>(DataSpace.CSSpace)
+                    .Single()
+                    .EntitySetMappings
+                    .Single(s => s.EntitySet == entitySet);
+
+                var tableEntitySet = mapping
+                    .EntityTypeMappings
+                    .Single()
+                    .Fragments
+                    .Single()
+                    .StoreEntitySet;
+
+                var tableName = tableEntitySet.MetadataProperties["Table"].Value ?? tableEntitySet.Name;
+
+                var modelPropertyColumnNames = mapping
+                    .EntityTypeMappings
+                    .Single()
+                    .Fragments
+                    .Single()
+                    .PropertyMappings
+                    .OfType<ScalarPropertyMapping>()
+                    .Select(i => i.Column.Name)
+                    .ToList();
+
+                var databaseTableColumnNames = source
+                    .Database
+                    .SqlQuery<string>($"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='{tableName}'")
+                    .ToList();
+
+                if (!databaseTableColumnNames.Any())
+                {
+                    return true;
+                }
+
+                return modelPropertyColumnNames.All(subsetItem => databaseTableColumnNames.Any(supersetItem => supersetItem.Equals(subsetItem, StringComparison.OrdinalIgnoreCase)));
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+                return false;
+            }
         }
     }
 }

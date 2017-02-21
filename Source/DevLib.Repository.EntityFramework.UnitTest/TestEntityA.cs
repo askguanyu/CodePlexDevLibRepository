@@ -18,7 +18,7 @@ namespace DevLib.Repository.EntityFramework.UnitTest
 
         public DateTimeOffset? MyProperty4 { get; set; } = DateTimeOffset.Now;
 
-        //public string MyProperty5 { get; set; } = "b";
+        public string MyProperty5 { get; set; } = "b";
 
         public string MyProperty6 { get; set; } = "c";
 

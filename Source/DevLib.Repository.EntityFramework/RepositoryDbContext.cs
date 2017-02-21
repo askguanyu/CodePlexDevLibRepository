@@ -26,7 +26,7 @@ namespace DevLib.Repository.EntityFramework
         {
             this.Configuration.ProxyCreationEnabled = false;
 
-            if (!this.CompatibleWithModel())
+            if (!this.CompatibleWithModel<TEntity>())
             {
                 Database.SetInitializer(new MigrateDatabaseToLatestVersion<RepositoryDbContext<TEntity>, RepositoryDbMigrationsConfiguration<RepositoryDbContext<TEntity>>>(true));
             }
@@ -41,7 +41,7 @@ namespace DevLib.Repository.EntityFramework
         {
             this.Configuration.ProxyCreationEnabled = false;
 
-            if (!this.CompatibleWithModel())
+            if (!this.CompatibleWithModel<TEntity>())
             {
                 Database.SetInitializer(new MigrateDatabaseToLatestVersion<RepositoryDbContext<TEntity>, RepositoryDbMigrationsConfiguration<RepositoryDbContext<TEntity>>>(true));
             }
