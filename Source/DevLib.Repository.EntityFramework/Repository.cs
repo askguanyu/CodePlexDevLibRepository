@@ -44,6 +44,7 @@ namespace DevLib.Repository.EntityFramework
         /// </summary>
         public Repository()
         {
+            this.ThrowOnError = true;
             this._dbContext = new RepositoryDbContext<TEntity>();
             this._table = this._dbContext.Set<TEntity>();
 
@@ -63,6 +64,7 @@ namespace DevLib.Repository.EntityFramework
         /// <param name="nameOrConnectionString">Either the database name or a connection string.</param>
         public Repository(string nameOrConnectionString)
         {
+            this.ThrowOnError = true;
             this._dbContext = new RepositoryDbContext<TEntity>(nameOrConnectionString);
             this._table = this._dbContext.Set<TEntity>();
 
@@ -82,6 +84,7 @@ namespace DevLib.Repository.EntityFramework
         /// <param name="dbContext">The database context.</param>
         public Repository(DbContext dbContext)
         {
+            this.ThrowOnError = true;
             this._dbContext = dbContext;
             this._table = this._dbContext.Set<TEntity>();
 
@@ -101,6 +104,15 @@ namespace DevLib.Repository.EntityFramework
         ~Repository()
         {
             this.Dispose(false);
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether throw exception on any error.
+        /// </summary>
+        public bool ThrowOnError
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -178,7 +190,21 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            return this._table.Create();
+            try
+            {
+                return this._table.Create();
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -190,9 +216,23 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            var result = this._table.Add(entity);
-            this._dbContext.SaveChanges();
-            return result;
+            try
+            {
+                var result = this._table.Add(entity);
+                this._dbContext.SaveChanges();
+                return result;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -204,9 +244,23 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            var result = this._table.AddRange(entities);
-            this._dbContext.SaveChanges();
-            return result;
+            try
+            {
+                var result = this._table.AddRange(entities);
+                this._dbContext.SaveChanges();
+                return result;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -218,9 +272,23 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            this._table.AddOrUpdate(entity);
-            this._dbContext.SaveChanges();
-            return entity;
+            try
+            {
+                this._table.AddOrUpdate(entity);
+                this._dbContext.SaveChanges();
+                return entity;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -232,9 +300,23 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            this._table.AddOrUpdate(entities.ToArray());
-            this._dbContext.SaveChanges();
-            return entities;
+            try
+            {
+                this._table.AddOrUpdate(entities.ToArray());
+                this._dbContext.SaveChanges();
+                return entities;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -246,15 +328,29 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            var result = this._table.Find(keyValues);
-
-            if (result != null)
+            try
             {
-                result = this._table.Remove(result);
-                this._dbContext.SaveChanges();
-            }
+                var result = this._table.Find(keyValues);
 
-            return result;
+                if (result != null)
+                {
+                    result = this._table.Remove(result);
+                    this._dbContext.SaveChanges();
+                }
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -266,9 +362,23 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            this._dbContext.Entry(entity).State = EntityState.Deleted;
-            this._dbContext.SaveChanges();
-            return entity;
+            try
+            {
+                this._dbContext.Entry(entity).State = EntityState.Deleted;
+                this._dbContext.SaveChanges();
+                return entity;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -280,19 +390,28 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            if (entities == null)
+            try
             {
+                foreach (var entity in entities)
+                {
+                    this._dbContext.Entry(entity).State = EntityState.Deleted;
+                }
+
+                this._dbContext.SaveChanges();
+
                 return entities;
             }
-
-            foreach (var entity in entities)
+            catch (Exception e)
             {
-                this._dbContext.Entry(entity).State = EntityState.Deleted;
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
             }
-
-            this._dbContext.SaveChanges();
-
-            return entities;
         }
 
         /// <summary>
@@ -304,16 +423,30 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            var result = this.Select(predicate);
-
-            foreach (var entity in result)
+            try
             {
-                this._dbContext.Entry(entity).State = EntityState.Deleted;
+                var result = this.Select(predicate);
+
+                foreach (var entity in result)
+                {
+                    this._dbContext.Entry(entity).State = EntityState.Deleted;
+                }
+
+                this._dbContext.SaveChanges();
+
+                return result;
             }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
 
-            this._dbContext.SaveChanges();
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
 
-            return result;
+                return null;
+            }
         }
 
         /// <summary>
@@ -333,8 +466,22 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
-                this._table.RemoveRange(this._table);
-                return this._dbContext.SaveChanges();
+                try
+                {
+                    this._table.RemoveRange(this._table);
+                    return this._dbContext.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    InternalLogger.Log(ex);
+
+                    if (this.ThrowOnError)
+                    {
+                        throw;
+                    }
+
+                    return 0;
+                }
             }
         }
 
@@ -347,9 +494,23 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            this._dbContext.Entry(entity).State = EntityState.Modified;
-            this._dbContext.SaveChanges();
-            return entity;
+            try
+            {
+                this._dbContext.Entry(entity).State = EntityState.Modified;
+                this._dbContext.SaveChanges();
+                return entity;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -361,19 +522,28 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            if (entities == null)
+            try
             {
+                foreach (var entity in entities)
+                {
+                    this._dbContext.Entry(entity).State = EntityState.Modified;
+                }
+
+                this._dbContext.SaveChanges();
+
                 return entities;
             }
-
-            foreach (var entity in entities)
+            catch (Exception e)
             {
-                this._dbContext.Entry(entity).State = EntityState.Modified;
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
             }
-
-            this._dbContext.SaveChanges();
-
-            return entities;
         }
 
         /// <summary>
@@ -385,7 +555,21 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            return this._table.Find(keyValues) != null;
+            try
+            {
+                return this._table.Find(keyValues) != null;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -397,7 +581,21 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            return this._table.AsNoTracking().Any(predicate);
+            try
+            {
+                return this._table.AsNoTracking().Any(predicate);
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -409,7 +607,21 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            return this._table.Find(keyValues);
+            try
+            {
+                return this._table.Find(keyValues);
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -421,7 +633,21 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            return this._table.AsNoTracking().Where(predicate).AsEnumerable();
+            try
+            {
+                return this._table.AsNoTracking().Where(predicate).AsEnumerable();
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>
@@ -432,7 +658,21 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
-            return this._table.AsNoTracking().AsQueryable();
+            try
+            {
+                return this._table.AsNoTracking().AsQueryable();
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return null;
+            }
         }
 
         /// <summary>

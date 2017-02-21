@@ -369,7 +369,7 @@ namespace DevLib.Repository.EntityFramework
             catch (Exception e)
             {
                 InternalLogger.Log(e);
-                return false;
+                return source.CompatibleWithModel();
             }
         }
     }
