@@ -24,5 +24,8 @@ DevLib is a highly reusable collection of components and core functionalities ad
 It is time to boost your productivity.
         </description>
         <tags>repository EntityFramework Entity Framework</tags>
+        <dependencies>
+          <dependency id="DevLib.Repository" version="$version$"/>
+        </dependencies>
     </metadata>
 </package>
