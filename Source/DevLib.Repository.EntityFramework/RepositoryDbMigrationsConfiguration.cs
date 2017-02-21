@@ -21,7 +21,7 @@ namespace DevLib.Repository.EntityFramework
         public RepositoryDbMigrationsConfiguration()
         {
             this.AutomaticMigrationsEnabled = true;
-            this.AutomaticMigrationDataLossAllowed = true;
+            this.AutomaticMigrationDataLossAllowed = false;
         }
     }
 }

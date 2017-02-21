@@ -23,14 +23,12 @@ namespace DevLib.Repository.EntityFramework
         public RepositoryDbContextBase()
             : base()
         {
-            Database.SetInitializer<RepositoryDbContextBase>(new CreateDatabaseIfNotExists<RepositoryDbContextBase>());
-
-            if (this.Database.Connection.State == ConnectionState.Open && !this.Database.CompatibleWithModel(false))
-            {
-                Database.SetInitializer<RepositoryDbContextBase>(new MigrateDatabaseToLatestVersion<RepositoryDbContextBase, RepositoryDbMigrationsConfiguration<RepositoryDbContextBase>>());
-            }
-
             this.Configuration.ProxyCreationEnabled = false;
+
+            if (!this.CompatibleWithModel())
+            {
+                Database.SetInitializer(new MigrateDatabaseToLatestVersion<RepositoryDbContextBase, RepositoryDbMigrationsConfiguration<RepositoryDbContextBase>>(true));
+            }
         }
 
         /// <summary>
@@ -40,14 +38,12 @@ namespace DevLib.Repository.EntityFramework
         public RepositoryDbContextBase(string nameOrConnectionString)
             : base(nameOrConnectionString)
         {
-            Database.SetInitializer<RepositoryDbContextBase>(new CreateDatabaseIfNotExists<RepositoryDbContextBase>());
-
-            if (this.Database.Connection.State == ConnectionState.Open && !this.Database.CompatibleWithModel(false))
-            {
-                Database.SetInitializer<RepositoryDbContextBase>(new MigrateDatabaseToLatestVersion<RepositoryDbContextBase, RepositoryDbMigrationsConfiguration<RepositoryDbContextBase>>());
-            }
-
             this.Configuration.ProxyCreationEnabled = false;
+
+            if (!this.CompatibleWithModel())
+            {
+                Database.SetInitializer(new MigrateDatabaseToLatestVersion<RepositoryDbContextBase, RepositoryDbMigrationsConfiguration<RepositoryDbContextBase>>(true));
+            }
         }
 
         /// <summary>

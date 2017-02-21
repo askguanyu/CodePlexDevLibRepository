@@ -171,5 +171,37 @@ namespace DevLib.Repository.EntityFramework
             var container = source.MetadataWorkspace.GetEntityContainer(source.DefaultContainerName, DataSpace.CSpace);
             return container.BaseEntitySets.FirstOrDefault(item => item.ElementType.FullName.Equals(elementTypeName));
         }
+
+        /// <summary>
+        /// Checks whether or not the database is compatible with the the current Code First model.
+        /// </summary>
+        /// <param name="source">The source DbContext.</param>
+        /// <returns>True if the model hash in the context and the database match; false otherwise.</returns>
+        public static bool CompatibleWithModel(this DbContext source)
+        {
+            return source.Database.CompatibleWithModel();
+        }
+
+        /// <summary>
+        /// Checks whether or not the database is compatible with the the current Code First model.
+        /// </summary>
+        /// <param name="source">The source Database.</param>
+        /// <returns>True if the model hash in the context and the database match; false otherwise.</returns>
+        public static bool CompatibleWithModel(this Database source)
+        {
+            var result = true;
+
+            try
+            {
+                result = source.CompatibleWithModel(true);
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+                result = false;
+            }
+
+            return result;
+        }
     }
 }
