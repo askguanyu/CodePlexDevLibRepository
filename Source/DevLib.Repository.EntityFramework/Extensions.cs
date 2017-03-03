@@ -23,6 +23,16 @@ namespace DevLib.Repository.EntityFramework
     public static class Extensions
     {
         /// <summary>
+        /// Gets the object context.
+        /// </summary>
+        /// <param name="source">The source DbContext.</param>
+        /// <returns>ObjectContext instance.</returns>
+        public static ObjectContext GetObjectContext(this DbContext source)
+        {
+            return ((IObjectContextAdapter)source).ObjectContext;
+        }
+
+        /// <summary>
         /// Gets the database table column names.
         /// </summary>
         /// <typeparam name="TEntity">The type of the entity.</typeparam>
