@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="Repository.cs" company="YuGuan Corporation">
+// <copyright file="EntityFrameworkRepository.cs" company="YuGuan Corporation">
 //     Copyright (c) YuGuan Corporation. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
@@ -17,7 +17,7 @@ namespace DevLib.Repository.EntityFramework
     /// Entity Framework Repository.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
+    public class EntityFrameworkRepository<TEntity> : IRepository<TEntity> where TEntity : class
     {
         /// <summary>
         /// The database context.
@@ -40,12 +40,12 @@ namespace DevLib.Repository.EntityFramework
         private bool _disposed = false;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Repository{TEntity}"/> class.
+        /// Initializes a new instance of the <see cref="EntityFrameworkRepository{TEntity}"/> class.
         /// </summary>
-        public Repository()
+        public EntityFrameworkRepository()
         {
             this.ThrowOnError = true;
-            this._dbContext = new RepositoryDbContext<TEntity>();
+            this._dbContext = new EntityFrameworkRepositoryDbContext<TEntity>();
             this._table = this._dbContext.Set<TEntity>();
 
             try
@@ -59,13 +59,13 @@ namespace DevLib.Repository.EntityFramework
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Repository{TEntity}"/> class.
+        /// Initializes a new instance of the <see cref="EntityFrameworkRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="nameOrConnectionString">Either the database name or a connection string.</param>
-        public Repository(string nameOrConnectionString)
+        public EntityFrameworkRepository(string nameOrConnectionString)
         {
             this.ThrowOnError = true;
-            this._dbContext = new RepositoryDbContext<TEntity>(nameOrConnectionString);
+            this._dbContext = new EntityFrameworkRepositoryDbContext<TEntity>(nameOrConnectionString);
             this._table = this._dbContext.Set<TEntity>();
 
             try
@@ -79,10 +79,10 @@ namespace DevLib.Repository.EntityFramework
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Repository{TEntity}"/> class.
+        /// Initializes a new instance of the <see cref="EntityFrameworkRepository{TEntity}"/> class.
         /// </summary>
         /// <param name="dbContext">The database context.</param>
-        public Repository(DbContext dbContext)
+        public EntityFrameworkRepository(DbContext dbContext)
         {
             this.ThrowOnError = true;
             this._dbContext = dbContext;
@@ -99,9 +99,9 @@ namespace DevLib.Repository.EntityFramework
         }
 
         /// <summary>
-        /// Finalizes an instance of the <see cref="Repository{TEntity}"/> class.
+        /// Finalizes an instance of the <see cref="EntityFrameworkRepository{TEntity}"/> class.
         /// </summary>
-        ~Repository()
+        ~EntityFrameworkRepository()
         {
             this.Dispose(false);
         }
@@ -168,6 +168,17 @@ namespace DevLib.Repository.EntityFramework
             get
             {
                 return this._table;
+            }
+        }
+
+        /// <summary>
+        /// Gets the underlying DbContext.
+        /// </summary>
+        public DbContext InnerDbContext
+        {
+            get
+            {
+                return this._dbContext;
             }
         }
 

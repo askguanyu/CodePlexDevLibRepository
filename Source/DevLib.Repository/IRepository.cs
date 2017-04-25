@@ -17,6 +17,35 @@ namespace DevLib.Repository
     public interface IRepository<TEntity> : IDisposable where TEntity : class
     {
         /// <summary>
+        /// Gets or sets a value indicating whether throw exception on any error.
+        /// </summary>
+        bool ThrowOnError
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets this property to log action.
+        /// For example, to log to the console, set this property to System.Console.Write(System.String).
+        /// </summary>
+        Action<string> Log
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets the timeout value, in seconds, for all context operations.
+        /// The default value is null, where null indicates that the default value of the underlying provider will be used.
+        /// </summary>
+        int? Timeout
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Creates new entity.
         /// </summary>
         /// <returns>TEntity instance.</returns>

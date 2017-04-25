@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="RepositoryDbContextBase.cs" company="YuGuan Corporation">
+// <copyright file="EntityFrameworkRepositoryDbContext.cs" company="YuGuan Corporation">
 //     Copyright (c) YuGuan Corporation. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
@@ -12,38 +12,48 @@ namespace DevLib.Repository.EntityFramework
     using System.Linq;
 
     /// <summary>
-    /// Class RepositoryDbContextBase.
+    /// Class EntityFrameworkRepositoryDbContext.
     /// </summary>
+    /// <typeparam name="TEntity">The type of the entity.</typeparam>
     /// <seealso cref="System.Data.Entity.DbContext" />
-    public abstract class RepositoryDbContextBase : DbContext
+    public class EntityFrameworkRepositoryDbContext<TEntity> : DbContext where TEntity : class
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RepositoryDbContextBase"/> class.
+        /// Initializes a new instance of the <see cref="EntityFrameworkRepositoryDbContext{TEntity}" /> class.
         /// </summary>
-        public RepositoryDbContextBase()
+        public EntityFrameworkRepositoryDbContext()
             : base()
         {
             this.Configuration.ProxyCreationEnabled = false;
 
-            if (!this.CompatibleWithModel())
+            if (!this.CompatibleWithModel<TEntity>())
             {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<RepositoryDbContextBase, RepositoryDbMigrationsConfiguration<RepositoryDbContextBase>>(true));
+                Database.SetInitializer(new MigrateDatabaseToLatestVersion<EntityFrameworkRepositoryDbContext<TEntity>, EntityFrameworkRepositoryDbMigrationsConfiguration<EntityFrameworkRepositoryDbContext<TEntity>>>(true));
             }
         }
 
         /// <summary>
-        /// Initializes a new instance of the<see cref="RepositoryDbContextBase"/> class.
+        /// Initializes a new instance of the <see cref="EntityFrameworkRepositoryDbContext{TEntity}" /> class.
         /// </summary>
         /// <param name="nameOrConnectionString">Either the database name or a connection string.</param>
-        public RepositoryDbContextBase(string nameOrConnectionString)
+        public EntityFrameworkRepositoryDbContext(string nameOrConnectionString)
             : base(nameOrConnectionString)
         {
             this.Configuration.ProxyCreationEnabled = false;
 
-            if (!this.CompatibleWithModel())
+            if (!this.CompatibleWithModel<TEntity>())
             {
-                Database.SetInitializer(new MigrateDatabaseToLatestVersion<RepositoryDbContextBase, RepositoryDbMigrationsConfiguration<RepositoryDbContextBase>>(true));
+                Database.SetInitializer(new MigrateDatabaseToLatestVersion<EntityFrameworkRepositoryDbContext<TEntity>, EntityFrameworkRepositoryDbMigrationsConfiguration<EntityFrameworkRepositoryDbContext<TEntity>>>(true));
             }
+        }
+
+        /// <summary>
+        /// Gets or sets the table for the given entity type.
+        /// </summary>
+        public DbSet<TEntity> Table
+        {
+            get;
+            set;
         }
 
         /// <summary>

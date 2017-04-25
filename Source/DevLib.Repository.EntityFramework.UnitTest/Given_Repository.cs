@@ -11,13 +11,13 @@ namespace DevLib.Repository.EntityFramework.UnitTest
     [TestClass]
     public class Given_Repository
     {
-        private Repository<TestEntityA> _testEntityARepo;
+        private EntityFrameworkRepository<TestEntityA> _testEntityARepo;
         private AutoIncrementId _id = new AutoIncrementId(Stopwatch.GetTimestamp(), 1);
 
         public Given_Repository()
         {
             var connectionString = File.ReadAllText("ConnectionString.txt");
-            this._testEntityARepo = new Repository<TestEntityA>(connectionString);
+            this._testEntityARepo = new EntityFrameworkRepository<TestEntityA>(connectionString);
             this._testEntityARepo.Log = msg => Debug.WriteLine(msg);
         }
 
