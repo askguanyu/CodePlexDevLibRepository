@@ -525,6 +525,41 @@ namespace DevLib.Repository.EntityFramework
         }
 
         /// <summary>
+        /// Updates the specified entity with specified properties.
+        /// </summary>
+        /// <param name="entity">The entity to update.</param>
+        /// <param name="properties">The properties to update.</param>
+        /// <returns>true if succeeded; otherwise, false.</returns>
+        public bool Update(TEntity entity, params Expression<Func<TEntity, object>>[] properties)
+        {
+            this.CheckDisposed();
+
+            try
+            {
+                this._table.Attach(entity);
+                var entry = this._dbContext.Entry(entity);
+
+                foreach (var property in properties)
+                {
+                    entry.Property(property).IsModified = true;
+                }
+
+                return this._dbContext.SaveChanges() > 0;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+
+                if (this.ThrowOnError)
+                {
+                    throw;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Updates the given collection of entities.
         /// </summary>
         /// <param name="entities">The collection of entities to update.</param>
