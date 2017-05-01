@@ -237,6 +237,8 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
+                this.Detach(entity);
+
                 if (this.ThrowOnError)
                 {
                     throw;
@@ -264,6 +266,8 @@ namespace DevLib.Repository.EntityFramework
             catch (Exception e)
             {
                 InternalLogger.Log(e);
+
+                this.Detach(entities);
 
                 if (this.ThrowOnError)
                 {
@@ -293,6 +297,8 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
+                this.Detach(entity);
+
                 if (this.ThrowOnError)
                 {
                     throw;
@@ -320,6 +326,8 @@ namespace DevLib.Repository.EntityFramework
             catch (Exception e)
             {
                 InternalLogger.Log(e);
+
+                this.Detach(entities);
 
                 if (this.ThrowOnError)
                 {
@@ -383,6 +391,8 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
+                this.Detach(entity);
+
                 if (this.ThrowOnError)
                 {
                     throw;
@@ -416,6 +426,8 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
+                this.Detach(entities);
+
                 if (this.ThrowOnError)
                 {
                     throw;
@@ -434,9 +446,11 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
+            IEnumerable<TEntity> result = null;
+
             try
             {
-                var result = this.Select(predicate);
+                result = this.Select(predicate);
 
                 foreach (var entity in result)
                 {
@@ -450,6 +464,8 @@ namespace DevLib.Repository.EntityFramework
             catch (Exception e)
             {
                 InternalLogger.Log(e);
+
+                this.Detach(result);
 
                 if (this.ThrowOnError)
                 {
@@ -515,6 +531,8 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
+                this.Detach(entity);
+
                 if (this.ThrowOnError)
                 {
                     throw;
@@ -550,6 +568,8 @@ namespace DevLib.Repository.EntityFramework
             {
                 InternalLogger.Log(e);
 
+                this.Detach(entity);
+
                 if (this.ThrowOnError)
                 {
                     throw;
@@ -582,6 +602,8 @@ namespace DevLib.Repository.EntityFramework
             catch (Exception e)
             {
                 InternalLogger.Log(e);
+
+                this.Detach(entities);
 
                 if (this.ThrowOnError)
                 {
@@ -718,6 +740,41 @@ namespace DevLib.Repository.EntityFramework
                 }
 
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Detaches the specified entity.
+        /// </summary>
+        /// <param name="entity">The entity.</param>
+        public void Detach(TEntity entity)
+        {
+            try
+            {
+                this._dbContext.Entry(entity).State = EntityState.Detached;
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
+            }
+        }
+
+        /// <summary>
+        /// Detaches the specified entities.
+        /// </summary>
+        /// <param name="entities">The entities.</param>
+        public void Detach(IEnumerable<TEntity> entities)
+        {
+            try
+            {
+                foreach (var entity in entities)
+                {
+                    this.Detach(entity);
+                }
+            }
+            catch (Exception e)
+            {
+                InternalLogger.Log(e);
             }
         }
 
