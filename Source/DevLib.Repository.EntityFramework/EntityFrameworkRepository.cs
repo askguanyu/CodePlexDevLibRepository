@@ -347,9 +347,11 @@ namespace DevLib.Repository.EntityFramework
         {
             this.CheckDisposed();
 
+            TEntity result = default(TEntity);
+
             try
             {
-                var result = this._table.Find(keyValues);
+                result = this._table.Find(keyValues);
 
                 if (result != null)
                 {
@@ -362,6 +364,8 @@ namespace DevLib.Repository.EntityFramework
             catch (Exception e)
             {
                 InternalLogger.Log(e);
+
+                this.Detach(result);
 
                 if (this.ThrowOnError)
                 {
@@ -749,13 +753,16 @@ namespace DevLib.Repository.EntityFramework
         /// <param name="entity">The entity.</param>
         public void Detach(TEntity entity)
         {
-            try
+            if (entity != null)
             {
-                this._dbContext.Entry(entity).State = EntityState.Detached;
-            }
-            catch (Exception e)
-            {
-                InternalLogger.Log(e);
+                try
+                {
+                    this._dbContext.Entry(entity).State = EntityState.Detached;
+                }
+                catch (Exception e)
+                {
+                    InternalLogger.Log(e);
+                }
             }
         }
 
@@ -765,16 +772,19 @@ namespace DevLib.Repository.EntityFramework
         /// <param name="entities">The entities.</param>
         public void Detach(IEnumerable<TEntity> entities)
         {
-            try
+            if (entities != null)
             {
-                foreach (var entity in entities)
+                try
                 {
-                    this.Detach(entity);
+                    foreach (var entity in entities)
+                    {
+                        this.Detach(entity);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                InternalLogger.Log(e);
+                catch (Exception e)
+                {
+                    InternalLogger.Log(e);
+                }
             }
         }
 
@@ -831,7 +841,7 @@ namespace DevLib.Repository.EntityFramework
         {
             if (this._disposed)
             {
-                throw new ObjectDisposedException("DevLib.Repository.EntityFramework.Repository<TEntity>");
+                throw new ObjectDisposedException($"DevLib.Repository.EntityFramework.EntityFrameworkRepository<{typeof(TEntity).Name}>");
             }
         }
     }
